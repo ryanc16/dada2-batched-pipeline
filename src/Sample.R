@@ -28,7 +28,6 @@ Sample<-function(fwdSrc, revSrc) {
   merged<-DataFile(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("rdata/merged/", "", "merged", "rds")))
   seqtab<-DataFile(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("rdata/seqtab/", "", "seqtab", "rds")))
   seqtabNoChim<-DataFile(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("rdata/seqtab/nochim/", "", "seqtab_nochim", "rds")))
-  taxonomy<-DataFile(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("rdata/taxonomy/", "", "tax", "rds")))
   
   return(
     proto(
@@ -47,8 +46,7 @@ Sample<-function(fwdSrc, revSrc) {
       ),
       merged=merged,
       seqtab=seqtab,
-      seqtabNoChim=seqtabNoChim,
-      taxonomy=taxonomy
+      seqtabNoChim=seqtabNoChim
     )
   )
 }
