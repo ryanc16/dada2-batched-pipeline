@@ -1,1 +1,14 @@
+# R and R Studio files
 .Rhistory
+.Rproj.user
+.RData
+
+# Any data files #
+*.fastq
+*.rds
+*.csv
+
+# Any compressed or archived files #
+*.zip
+*.gz
+*.tar
