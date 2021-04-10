@@ -439,11 +439,11 @@ Project<-function(dataDir, dataPattern) {
         if (!this$taxonomy$exists()) {
           seqtabNoChims<-this$getSequenceTablesNoChims()
           seqtabNoChimData<-lapply(seqtabNoChims, function(file) file$load())
-          seqtabMatrix<-do.call(rbind, seqtabNoChimData)
+          seqtabNoChimMatrix<-do.call(rbind, seqtabNoChimData)
           
           logger$info("Using training file: ", trainingFile$path)
           taxa<-timedtask(function() {
-            assignTaxonomy(seqtabMatrix, trainingFile$path, multithread=TRUE, verbose=2)
+            assignTaxonomy(seqtabNoChimMatrix, trainingFile$path, multithread=TRUE, verbose=2)
           })
           logger$info("Saving taxonomy table csv")
           this$taxonomy$save(taxa)
