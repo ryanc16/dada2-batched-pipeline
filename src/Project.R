@@ -425,8 +425,13 @@ Project<-function(dataDir, dataPattern) {
           seqtabNoChimData<-lapply(seqtabNoChims, function(file) file$load())
           seqtabNoChimMatrix<-do.call(rbind, seqtabNoChimData)
           this$seqtabNoChim$save(seqtabNoChimMatrix)
-          this$seqtabNoChimCsv$save(seqtabNoChimMatrix)
           lapply(seqtabs, function(file) file$unload())
+        }
+        
+        if (this$seqtabNoChim$exists() && !this$seqtabNoChimCsv$exists()) {
+          logger$info("Saving sequence table (without bimeras) csv")
+          this$seqtabNoChimCsv$save(this$seqtabNoChim$load())
+          this$seqtabNoChim$unload()
         }
       },
       processTaxonomy=function(this, trainingFile) {
@@ -440,6 +445,7 @@ Project<-function(dataDir, dataPattern) {
           taxa<-timedtask(function() {
             assignTaxonomy(seqtabMatrix, trainingFile$path, multithread=TRUE, verbose=2)
           })
+          logger$info("Saving taxonomy table csv")
           this$taxonomy$save(taxa)
         }
       },
@@ -488,7 +494,7 @@ Project<-function(dataDir, dataPattern) {
             seqtabs[[i]]$unload()
             seqtabNoChims[[i]]$load()
           }
-          logger$info("Saving tracked reads")
+          logger$info("Saving tracked reads csv")
           this$tracked$save(tracked)
         }
       }
