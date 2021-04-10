@@ -7,7 +7,7 @@ source("src/Logger.R")
 source("src/timedtask.R")
 
 logger<-Logger()
-logger$setLogLevel(Logger.loglevel$info)
+logger$setLogLevel(Logger.loglevel$trace)
 projDir<-path.expand("~/Projects/R/sequence-data/")
 dataDir<-path.expand("~/Projects/R/sequence-data/data/")
 dataPattern<-"\\.fastq$"

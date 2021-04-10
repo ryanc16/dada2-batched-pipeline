@@ -5,7 +5,7 @@ source("src/Sample.R")
 source("src/Logger.R")
 
 logger<-Logger()
-logger$setLogLevel(Logger.loglevel$debug)
+logger$setLogLevel(Logger.loglevel$trace)
 
 Project<-function(dataDir, dataPattern) {
   
@@ -42,6 +42,7 @@ Project<-function(dataDir, dataPattern) {
       revError=DataFile(paste0(dataDir, "rdata/err_R.rds")),
       seqtab=DataFile(paste0(dataDir, "rdata/seqtab/seqtab.rds")),
       seqtabNoChim=DataFile(paste0(dataDir, "rdata/seqtab/nochim/seqtab.nochim.rds")),
+      seqtabNoChimCsv=CSVFile(paste0(dataDir, "results/seqtabNoChim.csv")),
       taxonomy=CSVFile(paste0(dataDir, "results/taxonomy.csv")),
       tracked=CSVFile(paste0(dataDir, "results/tracked.csv")),
       samples=samples,
@@ -342,10 +343,8 @@ Project<-function(dataDir, dataPattern) {
         logger$info("Creating sequence tables")
         
         seqtabs<-this$getSequenceTables()
-        seqtabNoChims<-this$getSequenceTablesNoChims()
         seqtabsMissing<-unlist(lapply(seqtabs, function(file) !file$exists()))
         seqtabs<-seqtabs[seqtabsMissing]
-        seqtabNoChims<-seqtabNoChims[seqtabsMissing]
         names<-this$getSampleNames()[seqtabsMissing]
         
         logger$info(length(seqtabs), " samples need sequence tables created")
@@ -358,21 +357,33 @@ Project<-function(dataDir, dataPattern) {
           seqtabResult<-timedtask(function() {
             makeSequenceTable(mergedData)
           })
-          
           rownames(seqtabResult)<-names
           
-          logger$info("Saving sequence tables")
+          logger$info("Saving sequence table")
           this$seqtab$save(seqtabResult)
-          for (i in 1:length(merged)) {
-            # seqtabResult<-makeSequenceTable(merged[[i]]$load())
-            merged[[i]]$unload()
-            ## Separate out each row and construct it into a table with 1 row
-            subsetTable<-t(matrix(seqtabResult[i,]))
-            rownames(subsetTable)<-names[[i]]
-            colnames(subsetTable)<-colnames(seqtabResult)
-            seqtabs[[i]]$save(subsetTable)
-          }
           
+          ## Unload all the merged file data
+          lapply(merged, function(file) file$unload())
+          
+          logger$info("Saving individual sequence tables")
+          for (i in 1:length(merged)) {
+            ## Separate out each row and construct it into a table with 1 row
+            seqtabSubsetTable<-t(matrix(seqtabResult[i,]))
+            rownames(seqtabSubsetTable)<-names[[i]]
+            colnames(seqtabSubsetTable)<-colnames(seqtabResult)
+            seqtabs[[i]]$save(seqtabSubsetTable)
+          }
+        }
+        
+        ## should we create the combined sequence table?
+        seqtabs<-this$getSequenceTables()
+        seqtabsExist<-unlist(lapply(seqtabs, function(file) file$exists()))
+        if (all(seqtabsExist) && !this$seqtab$exists()) {
+          logger$info("Saving sequence table")
+          seqtabData<-lapply(seqtabs, function(file) file$load())
+          seqtabMatrix<-do.call(rbind, seqtabData)
+          this$seqtab$save(seqtabMatrix)
+          lapply(seqtabs, function(file) file$unload())
         }
         
         seqtabNoChims<-this$getSequenceTablesNoChims()
@@ -386,23 +397,37 @@ Project<-function(dataDir, dataPattern) {
           combinedSeqtab<-do.call(rbind, seqtabData)
           
           logger$info("Removing bimeras")
-          seqtab.nochims<-timedtask(function() {
+          seqtabNoChimResult<-timedtask(function() {
             removeBimeraDenovo(combinedSeqtab, method="consensus", multithread=TRUE, verbose=2)
           })
           
-          logger$info("Saving sequence tables (without bimeras)")
-          this$seqtabNoChim$save(seqtab.nochims)
+          logger$info("Saving sequence table (without bimeras)")
+          this$seqtabNoChim$save(seqtabNoChimResult)
+          
+          ## Unload all the seqtab file data
+          lapply(seqtabs, function(file) file$unload())
+          
+          logger$info("Saving individual sequence tables (without bimeras)")
           for (i in 1:length(seqtabs)) {
-            seqtabs[[i]]$unload()
             ## Separate out each row and construct it into a table with 1 row
-            seqtab.nochim<-t(matrix(seqtab.nochims[i,]))
-            rownames(seqtab.nochim)<-names[[i]]
-            colnames(seqtab.nochim)<-colnames(seqtab.nochims)
-            seqtabNoChims[[i]]$save(seqtab.nochim)
-            
+            seqtabNoChimSubsetTable<-t(matrix(seqtabNoChimResult[i,]))
+            rownames(seqtabNoChimSubsetTable)<-names[[i]]
+            colnames(seqtabNoChimSubsetTable)<-colnames(seqtabNoChimResult)
+            seqtabNoChims[[i]]$save(seqtabNoChimSubsetTable)
           }
         }
         
+        ## should we create the combined sequence no chim table?
+        seqtabNoChims<-this$getSequenceTablesNoChims()
+        seqtabNoChimsExist<-unlist(lapply(seqtabNoChims, function(file) file$exists()))
+        if (all(seqtabNoChimsExist) && !this$seqtabNoChim$exists()) {
+          logger$info("Saving sequence table (without bimeras)")
+          seqtabNoChimData<-lapply(seqtabNoChims, function(file) file$load())
+          seqtabNoChimMatrix<-do.call(rbind, seqtabNoChimData)
+          this$seqtabNoChim$save(seqtabNoChimMatrix)
+          this$seqtabNoChimCsv$save(seqtabNoChimMatrix)
+          lapply(seqtabs, function(file) file$unload())
+        }
       },
       processTaxonomy=function(this, trainingFile) {
         logger$info("Assigning taxonomy")
