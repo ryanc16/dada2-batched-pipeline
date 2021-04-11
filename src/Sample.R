@@ -16,12 +16,12 @@ Sample<-function(fwdSrc, revSrc) {
   }
   
   fwdRead<-File(fwdSrc)
-  fwdFilt<-File(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("filtered/", "F", "filt", "fastq")))
+  fwdFilt<-File(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("filtered/", "F", "filt", "fastq.gz")))
   fwdDerep<-DataFile(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("rdata/derep/", "F", "derep", "rds")))
   fwdDada<-DataFile(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("rdata/dada/", "F", "dada", "rds")))
   
   revRead<-File(revSrc)
-  revFilt<-File(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("filtered/", "R", "filt", "fastq")))
+  revFilt<-File(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("filtered/", "R", "filt", "fastq.gz")))
   revDerep<-DataFile(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("rdata/derep/", "R", "derep", "rds")))
   revDada<-DataFile(createFilePath(c("{directory}", "{direction}", "{id}", "{ext}"), c("rdata/dada/", "R", "dada", "rds")))
   
