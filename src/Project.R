@@ -1,5 +1,5 @@
 require("proto")
-source("src/DataFile.R")
+source("src/RDSFile.R")
 source("src/CSVFile.R")
 source("src/Sample.R")
 source("src/Logger.R")
@@ -38,13 +38,15 @@ Project<-function(dataDir, dataPattern) {
   logger$info("Finished creating project")
   return(
     proto(
-      fwdError=DataFile(paste0(dataDir, "rdata/err_F.rds")),
-      revError=DataFile(paste0(dataDir, "rdata/err_R.rds")),
-      seqtab=DataFile(paste0(dataDir, "rdata/seqtab/seqtab.rds")),
-      seqtabNoChim=DataFile(paste0(dataDir, "rdata/seqtab/nochim/seqtab.nochim.rds")),
-      seqtabNoChimCsv=CSVFile(paste0(dataDir, "results/seqtabNoChim.csv")),
-      taxonomy=CSVFile(paste0(dataDir, "results/taxonomy.csv")),
-      tracked=CSVFile(paste0(dataDir, "results/tracked.csv")),
+      fwdError=RDSFile(paste0(dataDir, "rdata/err_F.rds")),
+      revError=RDSFile(paste0(dataDir, "rdata/err_R.rds")),
+      seqtab=RDSFile(paste0(dataDir, "rdata/seqtab/seqtab.rds")),
+      seqtabNoChim=RDSFile(paste0(dataDir, "rdata/seqtab/nochim/seqtab_nochim.rds")),
+      seqtabNoChimCsv=CSVFile(paste0(dataDir, "results/seqtab_nochim.csv")),
+      taxonomy=RDSFile(paste0(dataDir, "rdata/taxonomy.rds")),
+      taxonomyCsv=CSVFile(paste0(dataDir, "results/taxonomy.csv")),
+      tracked=RDSFile(paste0(dataDir, "rdata/tracked.rds")),
+      trackedCsv=CSVFile(paste0(dataDir, "results/tracked.csv")),
       samples=samples,
       batchRange=seq(0,0),
       setBatchRange=function(this, start, end) {
@@ -447,8 +449,9 @@ Project<-function(dataDir, dataPattern) {
           taxa<-timedtask(function() {
             assignTaxonomy(seqtabNoChimMatrix, trainingFile$path, multithread=TRUE, verbose=2)
           })
-          logger$info("Saving taxonomy table csv")
+          logger$info("Saving taxonomy table")
           this$taxonomy$save(taxa)
+          this$taxonomyCsv$save(taxa)
         }
       },
       processTrackedReads=function(this) {
@@ -456,7 +459,7 @@ Project<-function(dataDir, dataPattern) {
         logger$info("Generating tracked reads")
         
         if (!this$tracked$exists()) {
-          getN <- function(x) sum(getUniques(x))
+          getN<-function(x) sum(getUniques(x))
           
           sampleNames<-this$getAllSampleNames()
           
@@ -467,8 +470,8 @@ Project<-function(dataDir, dataPattern) {
           dereps<-this$getDereplicatedReads()
           dadas<-this$getDadas()
           merges<-this$getMergedPairs()
-          seqtabs<-this$getSequenceTables();
-          seqtabNoChims<-this$getSequenceTablesNoChims()
+          seqtabs<-this$seqtab$load()
+          seqtabNoChims<-this$seqtabNoChim$load()
           
           columns<-c("Reads F", "Reads R", "FiltsF", "FiltsR", "Dereps F", "Dereps R", "Dadas F", "Dadas R", "Merged", "SeqTab", "SeqTabNoChim")
           tracked<-matrix(nrow=length(sampleNames), ncol=length(columns), dimnames=list(sampleNames, columns), byrow=TRUE)
@@ -483,8 +486,8 @@ Project<-function(dataDir, dataPattern) {
             dadaFN<-getN(dadas$forward[[i]]$load())
             dadaRN<-getN(dadas$reverse[[i]]$load())
             mergedN<-getN(merges[[i]]$load())
-            seqtabN<-rowSums(seqtabs[[i]]$load())
-            seqtabNoChimN<-rowSums(seqtabNoChims[[i]]$load())
+            seqtabN<-sum(seqtabs[i,])
+            seqtabNoChimN<-sum(seqtabNoChims[i,])
             
             tracked[i,]<-c(readsFN, readsRN, filtsFN, filtsRN, derepFN, derepRN, dadaFN, dadaRN, mergedN, seqtabN, seqtabNoChimN)
             
@@ -493,11 +496,13 @@ Project<-function(dataDir, dataPattern) {
             dadas$forward[[i]]$unload()
             dadas$reverse[[i]]$unload()
             merges[[i]]$unload()
-            seqtabs[[i]]$unload()
-            seqtabNoChims[[i]]$load()
           }
-          logger$info("Saving tracked reads csv")
+          this$seqtab$unload()
+          this$seqtabNoChim$unload()
+          
+          logger$info("Saving tracked reads")
           this$tracked$save(tracked)
+          this$trackedCsv$save(tracked)
         }
       }
     )

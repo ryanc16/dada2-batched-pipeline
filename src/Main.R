@@ -1,6 +1,7 @@
 require("proto")
 require("dada2")
 require("hash")
+source("src/File.R")
 source("src/Project.R")
 source("src/Batcher.R")
 source("src/Logger.R")
