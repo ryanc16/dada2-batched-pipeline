@@ -477,7 +477,7 @@ Project<-function(dataDir, dataPattern) {
             readsFN<-getN(reads$forward[[i]]$path)
             readsRN<-getN(reads$reverse[[i]]$path)
             filtsFN<-getN(filts$forward[[i]]$path)
-            filtsRN<-getN(reads$reverse[[i]]$path)
+            filtsRN<-getN(filts$reverse[[i]]$path)
             derepFN<-getN(dereps$forward[[i]]$load())
             derepRN<-getN(dereps$reverse[[i]]$load())
             dadaFN<-getN(dadas$forward[[i]]$load())
