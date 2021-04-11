@@ -367,6 +367,7 @@ Project<-function(dataDir, dataPattern) {
           
           logger$info("Saving individual sequence tables")
           for (i in 1:length(merged)) {
+            logger$trace("Saving sequence table ", seqtabs[[i]]$path)
             ## Separate out each row and construct it into a table with 1 row
             seqtabSubsetTable<-t(matrix(seqtabResult[i,]))
             rownames(seqtabSubsetTable)<-names[[i]]
@@ -409,6 +410,7 @@ Project<-function(dataDir, dataPattern) {
           
           logger$info("Saving individual sequence tables (without bimeras)")
           for (i in 1:length(seqtabs)) {
+            logger$trace("Saving sequence table ", seqtabNoChims[[i]]$path)
             ## Separate out each row and construct it into a table with 1 row
             seqtabNoChimSubsetTable<-t(matrix(seqtabNoChimResult[i,]))
             rownames(seqtabNoChimSubsetTable)<-names[[i]]
