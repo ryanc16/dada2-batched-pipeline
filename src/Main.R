@@ -9,9 +9,12 @@ source("src/timedtask.R")
 
 logger<-Logger()
 logger$setLogLevel(Logger.loglevel$trace)
+
+#### Set the variables here to values for your project ####
 projDir<-path.expand("~/Projects/R/sequence-data/")
 dataDir<-path.expand("~/Projects/R/sequence-data/data/")
 dataPattern<-"\\.fastq$"
+batchSize<-4
 trainingFile<-File(paste0(projDir, "silva_nr99_v138.1_train_set.fa.gz"))
 
 Main<-function() {
@@ -23,7 +26,7 @@ Main<-function() {
     logger$warn("No samples in project, nothing to do, exiting!")
     return()
   }
-  batcher<-Batcher(numsamples, 4)
+  batcher<-Batcher(numsamples, batchSize)
   
   logger$info("Starting processing in batches of up to ", batcher$batchCount, " samples")
   message("")
